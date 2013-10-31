@@ -1,0 +1,20 @@
+$bg-color: #fafafa;
+$font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+$fg-color: #333;
+
+body{
+	background: $bg-color;
+	font-family: $font-family;
+	color: $fg-color;
+}
+
+.hero-unit {
+    margin: 50px auto 0 auto;
+    width: 300px;
+    font-size: 18px;
+    font-weight: 200;
+    line-height: 30px;
+    background-color: #eee;
+    border-radius: 6px;
+    padding: 60px;
+}
