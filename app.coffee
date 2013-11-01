@@ -15,8 +15,8 @@ app.directory = __dirname
 ###
 Load: Environment settings and route
 ###
-require ('./config/environments')(app)
-require ('./routes')(app)
+require('./config/environments')(app)
+require('./routes')(app)
 
 # Export...
 module.exports = app
