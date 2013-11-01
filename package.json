@@ -38,6 +38,10 @@
     "connect-livereload": "~0.2.0",
     "grunt-google-cdn": "~0.2.0",
     "grunt-ngmin": "~0.0.2",
-    "grunt-express": "~1.0.0"
+    "grunt-express": "~1.0.0",
+    "mocha": "~1.13.0",
+    "chai": "~1.8.1",
+    "grunt-mocha-test": "~0.7.0",
+    "superagent": "~0.15.7"
   }
 }

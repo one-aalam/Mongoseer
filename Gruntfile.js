@@ -220,6 +220,15 @@ module.exports = function (grunt) {
         }]
       }
     },
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec',
+          require: 'coffee-script'
+        },
+        src: ['test/**/*.coffee']
+      }
+    },
     // Put files not handled in other tasks here
     copy: {
       dist: {
@@ -310,7 +319,8 @@ module.exports = function (grunt) {
     'clean:server',
     'concurrent:test',
     'express:test',
-    'karma'
+    //'karma'
+    'mochaTest:test'
   ]);
 
   grunt.registerTask('build', [
