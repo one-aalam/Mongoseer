@@ -1,7 +1,14 @@
 <div class="hero-unit">
-  <h1>MongoSeer</h1>
-  <p>MongoDB explorer written using</p>
+  <h1>'Allo, 'Allo!</h1>
+  <p>You now have</p>
   <ul>
       <li ng-repeat="thing in awesomeThings">{{thing}}</li>
   </ul>
+  <ul>
+      <li ng-repeat="db in dbs" ng-click="refresh(db)">{{db}}</li>
+  </ul>
+  {{dbs.length}}
+  <button ng-click="refresh()">Pull Again!</button>
+  <p>installed.</p>
+  <h3>Enjoy coding! - Yeoman</h3>
 </div>
