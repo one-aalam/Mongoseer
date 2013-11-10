@@ -38,7 +38,10 @@ module.exports = function (grunt) {
       },
       compass: {
         files: ['<%= yeoman.app %>/styles/{,*/}*.{scss,sass}'],
-        tasks: ['compass']
+        tasks: ['compass'],
+        options: {
+            nospawn: false
+        },
       },
       livereload: {
         options: {
@@ -61,7 +64,7 @@ module.exports = function (grunt) {
         options: {
           livereload: true,
           server: path.resolve('app.js'),
-          bases: [path.resolve('./.tmp'), path.resolve(__dirname, yeomanConfig.app)]
+          bases: [path.resolve('./.tmp'), path.resolve(__dirname, yeomanConfig.app+'/')]
         }
       },
       test: {
@@ -130,7 +133,7 @@ module.exports = function (grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: '<%= yeoman.app %>/scripts',
+          cwd: 'app/scripts',
           src: '{,*/}*.coffee',
           dest: '.tmp/scripts',
           ext: '.js'
@@ -308,7 +311,9 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
-      'concurrent:server',
+      //'concurrent:server',
+      'compass',
+      'coffee:dist',
       'express:livereload',
       'open',
       'watch'
