@@ -40,6 +40,16 @@ dbPadRequest = (req, res, next) ->
 	req.collections = collections
 	next()
 
+# Helpers
+
+# Check if provided name/string is valid
+validName = (name) ->
+	name.match /^[a-zA-Z_][a-zA-Z0-9\._]*$/
+
+# Generate proper document ID
+docId     = (id) ->
+	conn.bson_serializer.ObjectID.createFromHexString(id)
+
 
 
 
@@ -56,7 +66,11 @@ module.exports = (app) ->
 
 	'use strict'
 
-	# Param pre-conditions
+	###
+	Parameters: Request padding
+	###
+
+	# Stuff database and database name in its presence
 	app.param 'db', (req, res, next, db) ->
 		#if databases[db]? then req.dbName = db else req.session.error = 'DB missing'
 		req.dbName = db
@@ -67,6 +81,7 @@ module.exports = (app) ->
   			req.db = connections[db]
 		next()
 
+	# Stuff collection and its name in its presence
 	app.param 'coll', (req, res, next, collName) ->
 		if collections[req.dbName]?
 			req.collName = collName
@@ -77,12 +92,16 @@ module.exports = (app) ->
 			if err or !coll
 				console.log 'Collection error'
 			else
-				req.coll = coll
+				req.collection = coll
 		next()
 
 	# Route: '/' Available for client-side MVC
 	app.get '/', (req, res, next) ->
 		res.render 'index',{title:'MongoSeer - Tiny MongoDB client!'}
+
+	###
+	Connection: Exposed methods (General purpose)
+	###
 
 	# Route: Metadata about local install
 	app.get '/api/meta', (req, res, next) ->
@@ -97,21 +116,27 @@ module.exports = (app) ->
 	app.get '/api/colls', dbPadRequest, (req, res, next) ->
 				res.json req.collections
 
+	###
+	Database: Exposed methods
+	###
+
 	# Route: List all collections for provided database
 	app.get '/api/dbs/:db', dbPadRequest, (req, res, next) ->
 				res.json req.collections[req.params.db]
 
+	###
+	Collection: Exposed methods
+	###
 
-	# Route: List all collections for provided database
+	# Route: Create a new collection
 	app.post '/api/dbs/:db', (req, res, next) ->
 			cName = req.body.collection
 			if cName? and cName.length
-				if cName.match /^[a-zA-Z_][a-zA-Z0-9\._]*$/
+				if validName(cName)
 					req.db.createCollection cName, (err, collection) ->
-						if err
-							req.session.error = 'Cannot create collection'
+						if err then next(err)
 						dbCollRefresh(req.db, req.dbName)
-						res.json 'Created ' + cName
+						res.json "Created collection '#{cName}' in '#{req.dbName}'"
 				else
 					res.json 'Invalid name'
 			else
@@ -119,13 +144,57 @@ module.exports = (app) ->
 
 	# Route: List documents in a particular collection
 	app.get '/api/dbs/:db/:coll', (req, res, next) ->
-			req.coll.find().toArray (err, result) ->
+			req.collection.find().toArray (err, result) ->
 				res.json result
 
-	# Route: List documents in a particular collection
-	app.post '/api/dbs/:db/:collname', (req, res, next) ->
-			req.
-			db_this.collection(req.params.coll).find().toArray (err, result) ->
+	# Route: Rename a collection 
+	app.post '/api/dbs/:db/:coll/rename', (req, res, next) ->
+			cName = req.body.collection
+			if cName? and cName.length and validName(cName)
+				req.collection.rename cName, (err, result) ->
+					dbCollRefresh(req.db, req.dbName)
+					#if err then res.json err
+					res.json result
+			else
+				res.json 'Notning changes, Nothing changed!'
+
+	# Route: Delete a collection
+	app.del '/api/dbs/:db/:coll', (req, res, next) ->
+			req.collection.drop (err, result) ->
+				dbCollRefresh(req.db, req.dbName)
+				res.json "Deleted '#{req.collName}'"
+
+	###
+	Documents: Exposed methods
+	###
+
+	# Route: Get document from a particular collection
+	app.get '/api/dbs/:db/:coll/:id', (req, res, next) ->
+			id = req.db.bson_serializer.ObjectID.createFromHexString(req.param('id').toString())
+			req.collection.findOne {_id: id}, (err, result) ->
+				if err then next(err) # -> Error handling middleware
 				res.json result
+
+	# Route: Post documents to a particular collection
+	app.post '/api/dbs/:db/:coll', (req, res, next) ->
+			doc = req.body
+			req.collection.insert doc, (err, result) ->
+				if err then next(err) # -> Error handling middleware
+				res.json result
+
+	# Route: Update a document in provided collection
+	app.put '/api/dbs/:db/:coll/:id', (req, res, next) ->
+			id = req.db.bson_serializer.ObjectID.createFromHexString(req.param('id').toString())
+			doc = req.body
+			req.collection.update {_id: id}, doc, {strict: true}, (err, result) ->
+				if err then next(err)
+				res.json if result is 1 then "Updated collection with #{id}" else "Couldn't update!"
+
+	# Route: Remove a document with provided id
+	app.del '/api/dbs/:db/:coll/:id', (req, res, next) ->
+			id = req.db.bson_serializer.ObjectID.createFromHexString(req.param('id').toString())
+			req.collection.remove {_id: id}, (err, result) ->
+				if err then next(err)
+				res.json if result is 1 then "Deleted collection with #{id}" else "Undeletable!"
 
 			
